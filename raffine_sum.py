@@ -1,0 +1,33 @@
+from mpi4py import MPI
+import numpy as np
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+numDataPerRank = 10  
+
+if rank == 0:
+    # create a data array on process 0
+    # in real code, this section might
+    # read in data parameters from a file
+    numData = 10  
+    data = np.linspace(0.0,3.14,numData)  
+else:
+    numData = None
+
+# broadcast numData and allocate array on other ranks:
+numData = comm.bcast(numData, root=0)
+if rank != 0:    
+    data = np.empty(numData, dtype='d') 
+    recvbuf = np.empty(numDataPerRank, dtype='d') 
+
+
+    comm.Scatter(data,recvbuf, root=0) # broadcast the array from rank 0 to all others
+
+print('Rank: ',rank, ', data received: ',data)
+
+#recvbuf = np.empty(numDataPerRank, dtype='d') # allocate space for recvbuf
+#r0=comm.Reduce(data,numData,op=MPI.SUM,root=0)
+#r1=comm.Reduce(data,numData,op=MPI.SUM,root=2)
+#print('----------------------------------------------------')
+#print('Result', r0)
+#print('res',r1)
